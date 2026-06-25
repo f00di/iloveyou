@@ -2,9 +2,20 @@
 
 // Primary customization values.
 const MAIN_MESSAGE = "Love you.";
-const PARTICLE_TEXT = "i love you";
+const PARTICLE_TEXT_VARIANTS = [
+  "iloveyou",
+  "i loveyou",
+  "ilove you",
+  "i love you"
+];
+
 const PARTICLE_COUNT = 700;
-const HEART_COLOR_PALETTE = ["#ff174f", "#ff2f6d", "#ff5d7e", "#ff8a5c", "#ffd1dc"];
+const HEART_Y_OFFSET = -90;
+const PULSE_SPEED = 0.0009;
+const PULSE_AMOUNT = 0.035;
+const GLITCH_INTENSITY = 0.18;
+const HEART_COLOR_PALETTE = ["#ff174f", "#ff2f6d", "#ff5d7e", "#ff7a45", "#fff0f5", "#ff9ab1", "#8fffd2"];
+const FLOATING_TEXT_VARIANTS = [...PARTICLE_TEXT_VARIANTS, "0xLOVE", "heart.key", "decrypt", "01001001"];
 
 const CONFIG = {
   introTypeSpeed: 34,
@@ -59,6 +70,10 @@ function pickColor(index) {
   return HEART_COLOR_PALETTE[index % HEART_COLOR_PALETTE.length];
 }
 
+function pickTextVariant(variants = PARTICLE_TEXT_VARIANTS) {
+  return variants[Math.floor(Math.random() * variants.length)];
+}
+
 function heartPoint(t) {
   const x = 16 * Math.pow(Math.sin(t), 3);
   const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
@@ -76,8 +91,8 @@ function resizeCanvas() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   centerX = width / 2;
-  centerY = height / 2 + Math.min(height * 0.06, 42);
-  heartScale = Math.min(width / 42, height / 34);
+  heartScale = Math.min(width / 42, height / 42);
+  centerY = getHeartCenterY();
 
   // Rebuild targets whenever the viewport changes so the heart stays centered.
   buildParticles();
@@ -85,6 +100,22 @@ function resizeCanvas() {
   if (!revealed || finalMode || reducedMotionQuery.matches) {
     drawFrame(performance.now());
   }
+}
+
+function getResponsiveHeartYOffset() {
+  if (width <= 560) {
+    return clamp(HEART_Y_OFFSET * 0.72, -80, -50);
+  }
+
+  return clamp(HEART_Y_OFFSET - width * 0.015, -130, -90);
+}
+
+function getHeartCenterY() {
+  const targetY = height / 2 + getResponsiveHeartYOffset();
+  const topSafeY = 18 + 13.5 * heartScale + CONFIG.heartLineWidth;
+  const bottomSafeY = height - 24 - 17.4 * heartScale - CONFIG.heartLineWidth;
+
+  return clamp(targetY, topSafeY, Math.max(topSafeY, bottomSafeY));
 }
 
 function buildParticles() {
@@ -111,6 +142,7 @@ function buildParticles() {
       scatterX: centerX + Math.cos(burstAngle) * burstRadius,
       scatterY: centerY + Math.sin(burstAngle) * burstRadius,
       color: pickColor(i + Math.floor(Math.random() * HEART_COLOR_PALETTE.length)),
+      text: pickTextVariant(),
       size: randomBetween(CONFIG.particleFontMin, CONFIG.particleFontMax) * clamp(heartScale / 18, 0.72, 1.18),
       alpha: randomBetween(0.58, 1),
       delay: randomBetween(0, 0.24),
@@ -124,6 +156,7 @@ function buildParticles() {
     x: randomBetween(width * 0.12, width * 0.88),
     y: randomBetween(height * 0.12, height * 0.9),
     color: pickColor(index + 2),
+    text: pickTextVariant(FLOATING_TEXT_VARIANTS),
     size: randomBetween(7, 11) * clamp(width / 900, 0.72, 1),
     alpha: randomBetween(0.16, 0.38),
     speed: randomBetween(0.12, 0.38),
@@ -183,12 +216,13 @@ function triggerReveal() {
 }
 
 function drawBackgroundGlow(time) {
-  const pulse = finalMode ? 1 : 0.82 + Math.sin(time * 0.0024) * 0.18;
+  const pulse = finalMode ? 1 : 1 + Math.sin(time * PULSE_SPEED) * PULSE_AMOUNT;
   const coreRadius = Math.min(width, height) * CONFIG.centerGlowRadius * pulse;
   const glow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreRadius * 2.8);
 
-  glow.addColorStop(0, "rgba(255, 47, 109, 0.32)");
-  glow.addColorStop(0.35, "rgba(255, 23, 79, 0.18)");
+  glow.addColorStop(0, "rgba(255, 47, 109, 0.28)");
+  glow.addColorStop(0.34, "rgba(255, 23, 79, 0.16)");
+  glow.addColorStop(0.62, "rgba(121, 255, 200, 0.035)");
   glow.addColorStop(1, "rgba(255, 23, 79, 0)");
 
   ctx.fillStyle = glow;
@@ -213,15 +247,46 @@ function drawFloaters(time) {
     ctx.globalAlpha = floater.alpha * fade;
     ctx.fillStyle = floater.color;
     ctx.shadowColor = floater.color;
-    ctx.fillText(PARTICLE_TEXT, x, y);
+    ctx.fillText(floater.text, x, y);
   });
+
+  ctx.restore();
+}
+
+function drawGlitchBands(time, revealProgress) {
+  if (finalMode || reducedMotionQuery.matches) {
+    return;
+  }
+
+  const gate = Math.sin(time * 0.0013) + Math.sin(time * 0.0037);
+
+  if (gate < 1.45) {
+    return;
+  }
+
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+
+  const bandCount = Math.max(1, Math.round(GLITCH_INTENSITY * 10));
+
+  for (let i = 0; i < bandCount; i += 1) {
+    const y = randomBetween(height * 0.08, height * 0.92);
+    const bandHeight = randomBetween(1, 5);
+    const x = randomBetween(-width * 0.1, width * 0.28);
+    const bandWidth = randomBetween(width * 0.2, width * 0.9);
+    const color = i % 3 === 0 ? "121, 255, 200" : "255, 47, 109";
+
+    ctx.globalAlpha = randomBetween(0.018, 0.06) * revealProgress;
+    ctx.fillStyle = `rgba(${color}, 1)`;
+    ctx.fillRect(x, y, bandWidth, bandHeight);
+  }
 
   ctx.restore();
 }
 
 function drawHeartParticles(time, revealProgress) {
   const progress = finalMode ? 1 : easeOutCubic(revealProgress);
-  const pulse = finalMode || revealProgress < 1 ? 1 : 1 + Math.sin(time * 0.0032) * 0.025;
+  const pulse = finalMode || revealProgress < 1 ? 1 : 1 + Math.sin(time * PULSE_SPEED) * PULSE_AMOUNT;
 
   ctx.save();
   ctx.textAlign = "center";
@@ -248,7 +313,7 @@ function drawHeartParticles(time, revealProgress) {
     ctx.fillStyle = particle.color;
     ctx.shadowColor = particle.color;
     ctx.shadowBlur = 10 + localProgress * 12;
-    ctx.fillText(PARTICLE_TEXT, px, py);
+    ctx.fillText(particle.text, px, py);
   });
 
   ctx.restore();
@@ -266,6 +331,7 @@ function drawFrame(time) {
 
   drawBackgroundGlow(time);
   drawFloaters(time);
+  drawGlitchBands(time, revealProgress);
   drawHeartParticles(time, revealProgress);
 
   if (revealed && !reducedMotionQuery.matches) {
