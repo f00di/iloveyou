@@ -41,19 +41,19 @@ Use these Vercel project settings:
 - Output Directory: `.`
 - Root Directory: repository root
 
-The included `vercel.json` routes all requests to `index.html`, which lets Vercel serve this as a plain static website.
+The included `vercel.json` keeps Vercel configured as a plain static website.
 
 ## Deploy On GitHub Pages
 
-1. Create a new GitHub repository.
-2. Upload the repository root files to the repository.
-3. In GitHub, open **Settings**.
-4. Go to **Pages**.
-5. Under **Build and deployment**, choose **Deploy from a branch**.
-6. Select the branch that contains these files, usually `main`.
-7. Select the root folder and save.
+Use these GitHub Pages settings:
 
-GitHub Pages will publish the static site after the deployment finishes.
+- Source: Deploy from a branch
+- Branch: `main`
+- Folder: `/root`
+
+To enable it, open the repository on GitHub, go to **Settings** > **Pages**, choose the settings above, and save.
+
+GitHub Pages will publish the site at `https://foodi.github.io/iloveyou/` after the deployment finishes.
 
 ## Customization
 
