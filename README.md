@@ -17,11 +17,12 @@ A romantic interactive static landing page with a terminal-style intro and a glo
 ## File Structure
 
 ```text
-heart-landing-page/
+.
 |-- index.html
 |-- styles.css
 |-- script.js
 |-- README.md
+|-- vercel.json
 `-- .gitignore
 ```
 
@@ -31,10 +32,21 @@ Open `index.html` directly in any modern browser.
 
 No build step or local server is required.
 
+## Deploy On Vercel
+
+Use these Vercel project settings:
+
+- Framework Preset: Other
+- Build Command: empty
+- Output Directory: `.`
+- Root Directory: repository root
+
+The included `vercel.json` routes all requests to `index.html`, which lets Vercel serve this as a plain static website.
+
 ## Deploy On GitHub Pages
 
 1. Create a new GitHub repository.
-2. Upload the contents of this folder to the repository.
+2. Upload the repository root files to the repository.
 3. In GitHub, open **Settings**.
 4. Go to **Pages**.
 5. Under **Build and deployment**, choose **Deploy from a branch**.
