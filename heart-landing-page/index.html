@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A romantic interactive Heart Landing Page made with HTML, CSS, and JavaScript.">
+  <title>Heart Landing Page</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <canvas id="heartCanvas" aria-hidden="true"></canvas>
+
+  <main class="landing" aria-labelledby="mainMessage">
+    <section class="hero" aria-live="polite">
+      <h1 id="mainMessage" class="main-message">Love you.</h1>
+
+      <div id="introPanel" class="intro-panel">
+        <div class="terminal" role="status" aria-label="Encrypted message status">
+          <p class="terminal-line" data-type="[system] Initializing heart.PROTOCOL_v2.0..."></p>
+          <p class="terminal-line" data-type="[status] decrypting emotional payload..."></p>
+          <p class="terminal-line" data-type="&gt; One encrypted package found for you."></p>
+        </div>
+
+        <button id="revealButton" class="decrypt-button" type="button" aria-label="Decrypt romantic message" aria-expanded="false">
+          <span aria-hidden="true">&#128274;</span>
+          <span>Decrypt Message</span>
+        </button>
+
+        <p class="helper-text">or just click anywhere</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
